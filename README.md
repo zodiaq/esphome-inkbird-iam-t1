@@ -6,3 +6,9 @@ Added:
   - Values out of range.
   - Events unrelated to actual sensor readings.
 - Setting the correct state class.
+
+You need to modify the lines below in the file:
+- HA API key
+- OTA password
+- Fallback AP password
+- Bluetooth MAC address
