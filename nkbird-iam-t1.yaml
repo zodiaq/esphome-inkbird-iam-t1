@@ -1,0 +1,157 @@
+esphome:
+  name: inkbird-iam-t1
+  friendly_name: inkbird-iam-t1
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+  level: INFO
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: ""
+
+ota:
+  - platform: esphome
+    password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Inkbird-Iam-T1 Fallback Hotspot"
+    password: ""
+
+captive_portal:
+
+esp32_ble_tracker:
+
+ble_client:
+  - mac_address: xx:xx:xx:xx:xx:xx #CHANGE MAC ADDRESS
+    id: inkbird_iam_t1
+
+sensor:
+  # Temperature
+  - platform: ble_client
+    state_class: measurement
+    filters: quantile
+    ble_client_id: inkbird_iam_t1
+    name: "IAM-T1 Temperature"
+    device_class: temperature
+    icon: 'mdi:temperature-celsius'
+    unit_of_measurement: '°C'
+    accuracy_decimals: 1  
+    service_uuid: 'ffe0'
+    characteristic_uuid: 'ffe4'
+    notify: true
+    type: characteristic
+    lambda: |-
+      if (x[0] != 0x55 && (x[4] & 0xf0) != 0) {
+        return NAN;
+      }
+      else {
+        const bool is_negative = ((x[4] & 0x0f) != 0);
+        float temp = float((x[5] << 8) | x[6]) / 10.0;
+        if (is_negative)
+          temp = -temp;
+
+        if (temp < 0.0 || temp > 50.0) {
+          return NAN;
+        }
+        else {
+          return temp;
+        }
+      }
+  # Humidity    
+  - platform: ble_client
+    state_class: measurement
+    filters: quantile
+    ble_client_id: inkbird_iam_t1
+    name: "IAM-T1 Humidity"
+    device_class: humidity
+    icon: 'mdi:water-percent'    
+    unit_of_measurement: '%'
+    accuracy_decimals: 0
+    service_uuid: 'ffe0'
+    characteristic_uuid: 'ffe4'
+    notify: true
+    type: characteristic
+    lambda: |-
+      if (x[0] != 0x55 && (x[4] & 0xf0) != 0) {
+        return NAN;
+      }
+      else {
+        const float humidity = float((x[7] << 8) | x[8]) / 10.0;
+        if (humidity < 0.0 || humidity > 85.0) {
+          return NAN;
+        }
+        else {
+          return humidity;
+        }
+      }
+  # Carbon Dioxide CO2
+  - platform: ble_client
+    state_class: measurement
+    filters: quantile
+    ble_client_id: inkbird_iam_t1
+    name: "IAM-T1 CO2"
+    device_class: carbon_dioxide
+    icon: 'mdi:molecule-co2'    
+    unit_of_measurement: 'ppm'
+    accuracy_decimals: 0
+    service_uuid: 'ffe0'
+    characteristic_uuid: 'ffe4'
+    notify: true
+    type: characteristic
+    lambda: |-
+      if (x[0] != 0x55 && (x[4] & 0xf0) != 0) {
+        return NAN;
+      }
+      else {
+        const float co2 = float((x[9] << 8) | x[10]);
+        if (co2 < 0 || co2 > 9999) {
+          return NAN;
+        }
+        else {
+          return co2;
+        }
+      }
+  # Air Pressure hPa    
+  - platform: ble_client
+    state_class: measurement
+    filters: quantile
+    ble_client_id: inkbird_iam_t1
+    name: "IAM-T1 Air Pressure"
+    device_class: atmospheric_pressure
+    unit_of_measurement: 'hPa'
+    accuracy_decimals: 0
+    icon: 'mdi:gauge'
+    service_uuid: 'ffe0'
+    characteristic_uuid: 'ffe4'
+    notify: true
+    type: characteristic
+    lambda: |-
+      if (x[0] != 0x55 && (x[4] & 0xf0) != 0) {
+        return NAN;
+      }
+      else {
+        const float pressure = float((x[11] << 8) | x[12]);
+        if (pressure < 600.0 || pressure > 1100.0) {
+          return NAN;
+        }
+        else {
+          return pressure;
+        }
+      }
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+
