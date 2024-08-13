@@ -4,4 +4,5 @@ This is an experimental ESPHome implementation for Inkbird IAM-T1 based on https
 Added:
 - Return NAN value for
   - Values out of range.
-  - Events unrelated to actual sensor readings. 
+  - Events unrelated to actual sensor readings.
+- Setting the correct state class.
